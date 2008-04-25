@@ -1,0 +1,56 @@
+[pair]
+		20-6fx2 (80x2個) : 64使って16余る
+[stack]
+		save/restoreに使える空間
+		20-6f（80バイト）を使ってみるか
+[heap]
+		256バイトの例の空間を使うか
+
+[pointer]
+		------00
+		ポインタ; これだと64個まで; pair or other heap-allocated objects
+		// メモリないしレジスタを128バイト消費
+		●pairの表現
+		
+		------01
+		→LREF表現
+		dddppp01
+		// (d) (p)
+		// env * d,p => (ref (ref env d) p)
+
+		-----010
+#		------11
+		16bit整数値; 32個使える
+		アドレス(13bit)もこれを利用
+		整数値が16bitである必要がなければ、15bitにしといて1ビットをconstフラグにしたい
+
+		----0110
+		λ印 (上位4ビットはarity)
+
+		---01110
+		misc; 0:#f, 1:#t, 2:'(), 3:eof-object, 4:#undefined 5:unbound
+		// 6: 7: reserved
+		λというかproc
+
+;		------11
+;		ヒープオブジェクト (procもこれか?)
+
+		------11 でとりあえず6bit整数行きますか
+
+		
+		<proc> 引数の個数 env (body)
+		2	   3         6 
+		
+
+----------------
+スタック		
+[20h-6Fh]
+
+0080h+[20h-6Fh]: car
+0100h+[20h-6Fh]: cdr
+
+;;
+
+(<λ.arity> 次)
+(body-addr 次)
+(env ())
