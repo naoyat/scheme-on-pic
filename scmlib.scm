@@ -702,6 +702,42 @@
 	 (cdddar)
 	 (set-car)
 	 (RETURN)
+   lset10  ; (caadr env) = w
+     (push)
+	 (mov    w env)
+	 (cadr)
+	 (set-car)
+	 (RETURN)
+   lset11  ; (cadadr env) = w
+     (push)
+	 (mov    w env)
+	 (cdadr)
+	 (set-car)
+	 (RETURN)
+   lset12  ; (caddadr env) = w
+     (push)
+	 (mov    w env)
+	 (cddadr)
+	 (set-car)
+	 (RETURN)
+   lset20  ; (caaddr env) = w
+     (push)
+	 (mov    w env)
+	 (caddr)
+	 (set-car)
+	 (RETURN)
+   lset21  ; (cadaddr env) = w
+     (push)
+	 (mov    w env)
+	 (cdaddr)
+	 (set-car)
+	 (RETURN)
+   lset30  ; (caadddr env) = w
+     (push)
+	 (mov    w env)
+	 (cadddr)
+	 (set-car)
+	 (RETURN)
 
 	 ;;
 	 ;; lrefXX
@@ -885,11 +921,18 @@
 	 (RETURN)
 
 	 ;;
-	 ;; print
+	 ;; print (w)
 	 ;;
    print
-     (push)
+;     (DEBUG:pc)
+;     (DEBUG:scm:stack)
+;    (push)
 	 (DEBUG:scm:w-pp) ;; for debug
+;     (DEBUG:scm:stack)
+;	 (DEBUG:if-debug)
+	 (RETURN)
+;	 (GOTO print-in-led)
+    print-in-led
 	 (int16-upper)
 	 (CALL   display-8bit-value)
      (pop)

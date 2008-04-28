@@ -124,7 +124,9 @@
 				  '()] )))
 
    (list 'ret (lambda ()
-				`((mov    val w) ; for return value
+				`(;;(mov    val w) ; for return value
+;;				  (DEBUG:file 99)
+;;				  (DEBUG:scm:stack)
 				  (mov    w continue)
 				  (int16-upper)
 				  (mov    PCLATH w)
@@ -134,44 +136,47 @@
 				  )))
 
    (list 'call (lambda ()
-				 (let1 after-call (label-gen "after-call")
-				   `(;; 引数はすべてスタック上にある
-;					 (DEBUG:pc)
-;					 (DEBUG:scm:w)
-;					 (DEBUG:scm:stack)
-;					 (DEBUG:scm:pairs)
-;					 (cadr) ; entrypointアドレス
-					 ;; entry = cadr
-					 ;; env = cddr
+;;				 (let1 after-call (label-gen "after-call")
+				 `(;; 引数はすべてスタック上にある
+					 ;; proc [argn ... arg1]
+;				   (DEBUG:file 98)
+;				   (DEBUG:scm:stack)
 
-					 ; w = proc : (λ entrypoint . env)
-					 (cdr)
-					 (mov    t1 w) ; t1 = w = (cdr <proc>) ; '(entrypoint . env)
-					 (cdr)
-					 (mov    t2 w) ; t2 = w = (cddr <proc>) ; proc.env
-					 (mov    w t1)
-					 (car)
-					 (mov    temp w) ; temp = w = (car t1) = entrypoint
+					 ;; w = proc : (λ entrypoint . env)
+				   (cdr)
+				   (mov    t1 w) ; t1 = w = (cdr <proc>) ; '(entrypoint . env)
+				   (cdr)
+				   (mov    t2 w) ; t2 = w = (cddr <proc>) ; proc.env
+				   (mov    w t1)
+				   (car)
+				   (mov    temp w) ; temp = w = (car t1) = entrypoint
+					 
+					 ;; proc.env (関数をバインドした時点のenv) を環境として使う。
+					 ;; 呼び出し時のenvはスタックに保存
+				   (push   env)    ; [env {argn .. arg1}]
+				   (mov    env t2) ; env = w = t2 = proc.env
+					 ;; [env {args}]
 
-					 (push   env)    ; [env {args}]
-					 (mov    env t2) ; env = w = t2 = proc.env
+;					 (push   continue) ; [continue env {args}]
+;					 (mov    continue (label ,after-call)) ; continue = <after-call>
+;				   (DEBUG:scm:stack)
+					 ;; procエントリポイントへ。
+					 ;; continueは保存されていないよ
+;					 (GOTO   label)
+				   (-- (call w))
+				   (mov    w temp) ; goto entrypoint
+				   (int16-upper)
+				   (mov    PCLATH w)
+				   (mov    w temp)
+				   (int16-lower)
+				   (mov    PCL w)
 
-					 (push   continue) ; [continue env {args}]
-					 (mov    continue (label ,after-call)) ; continue = <after-call>
+;				   ,after-call
+				   ;; []
+				   ;; valに返り値が入ってるので適宜wに移すこと
+;					 (mov    w val) ; 返り値を受け取る
+				   )))
 
-					 (-- (call w))
-					 (mov    w temp) ; goto entrypoint
-					 (int16-upper)
-					 (mov    PCLATH w)
-					 (mov    w temp)
-					 (int16-lower)
-					 (mov    PCL w)
-;					 (GOTO label)
-				   ,after-call
-				     (pop    continue)
-					 (pop    env)
-				     (mov    w val) ; 返り値を受け取る
-					 ))))
 
    ;; int16
    (list 'int16 (lambda () '((CALL int16)) ))
@@ -238,10 +243,14 @@
 
    ;; **
    (list 'lset (lambda (dep ofs)
-				 (if (and (= dep 0) (<= ofs 3))
-					 `((CALL ,(string->symbol #`"lset,ofs")))
-					 `((-- (lset ,dep ,ofs))
-					   ))))
+				 (cond [(and (= dep 0) (<= ofs 3))
+						`((CALL ,(string->symbol #`"lset,ofs")))]
+					   [(and (<= dep 3) (<= ofs 3))
+						`((CALL ,(string->symbol #`"lset,dep,ofs")))]
+					   [else
+						`((-- (lset ,dep ,ofs))
+						  )]
+					   )))
    (list 'lref (lambda (dep ofs)
 				 (cond [(and (= dep 0) (<= ofs 3))
 						`((CALL ,(string->symbol #`"lref,ofs")))]
@@ -360,7 +369,7 @@
 
    (list 'eval (lambda () '((CALL eval)) ))
 
-   (list 'print (lambda () '((CALL print)) )) ;; for debug
+;   (list 'print (lambda () '((CALL print)) )) ;; for debug
 
    (list 'display-int16 (lambda () '((CALL display-int16))))
 
