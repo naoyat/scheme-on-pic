@@ -160,8 +160,9 @@
 		[(eq? 'print operator) ;; print now only takes 1 argument
 		 (let1 after-call (label-gen "after-call")
 		   (let loop ([rest operands]
-					  [code `((push continue)
-							  (mov continue (label ,after-call)))])
+					  [code `(;(push continue)
+							  ;(mov continue (label ,after-call))
+							  )])
 			 (if (null? rest)
 				 `(,@code
 				   ;; 全ての引数をスタック上に
@@ -169,9 +170,9 @@
 				   (CALL  ,operator)
 				   ; []
 				   (mov   val ,scm-undefined)
-				   (ret)
+;				   (ret)
 				 ,after-call
-				   (pop continue)
+;				   (pop continue)
 				 )
 				 (loop (cdr rest)
 					   `(,@code
@@ -342,20 +343,21 @@
 			(let1 proc (cadr exp)
 			  (let (
 					[after-call (label-gen "after-call")]
-					[cont-label (label-gen "cont")]
+					[cont-proc (label-gen "cont")]
+					[skip-internal (label-gen "skip-internal")]
 					[end-label (label-gen "after-callcc")]
 					)
 				`(
 				  (-- call/cc)
-;				  (DEBUG:file continue)
+;				  (DEBUG:file 1)
 ;				  (DEBUG:pc)
 ;				  (DEBUG:scm:stack)
 ;				  (DEBUG:file top-of-stack)
 
 ;				  (MOVWF #x70)
 				  (MOVF  env W) (MOVWF #x70)
-				  (mov w (label ,after-call)) (MOVWF #x71)
-;				  (MOVF  continue W) (MOVWF #x71)
+;				  (mov w (label ,after-call)) (MOVWF #x71)
+				  (MOVF  continue W) (MOVWF #x71)
 				  (MOVF  top-of-stack W) (MOVWF #x72) ;; とりあえず top-of-stackを保存
 				  (MOVF  #x38 W) (MOVWF #x73)
 				  (MOVF  #x39 W) (MOVWF #x74)
@@ -363,14 +365,18 @@
 				  (MOVF  #x3B W) (MOVWF #x76)
 				  (MOVF  #x3C W) (MOVWF #x77)
 
+				  (push  continue)
+				  (mov   continue (label ,after-call))
+
 ;				  (push   continue)
-				  (mov    continue (label ,after-call)) ; continue = <after-call>
+;				  (mov    continue (label ,after-call)) ; continue = <after-call>
 
 				  ;; [ここまでのスタック] ; wは捨てて良い
-				  (mov   w #b00010110) ; arity=1のλ
+;				  (mov   w #b00010110) ; arity=1のλ
+				  (mov   w ,scm-continuation)
 				  (push)
 				  ;; [0x16]
-				  (mov w (label ,cont-label))
+				  (mov w (label ,cont-proc))
 				  (push)
 				  ;; [entrypoint 0x16]
 				  (mov w env)
@@ -381,20 +387,36 @@
 				  (push)
 				  ;; [cont] = [(0x16 entrypoint . env)]
 
+;				  (DEBUG:file 47)
+				  (mov   continue-cont ,scm-false)
+;				  (DEBUG:file continue-cont)
+;				  (CLRF continue-cont)
+
 				  ,@(scm-eval proc env)
+
+;				  (DEBUG:file continue-cont)
 				  ;; proc [cont]
 ;				  (DEBUG:file 17)
 ;				  (DEBUG:scm:stack)
 
 ;				  (push   env)
 ;				  (push   continue) ; [continue env {args}]
+;				  (DEBUG:file continue-cont)
 				  (call) ; cont
+;				  (DEBUG:file continue-cont)
 
 				,after-call
+;				  (DEBUG:file 4)
+;				  (DEBUG:scm:w)
+;				  (DEBUG:file val)
+;				  (DEBUG:scm:stack)
+;				  (DEBUG:file continue-cont)
+				  (pop    continue)
+
+;				  (DEBUG:file 34)
 ;				  (DEBUG:file continue)
-;				  (pop    continue)
-;				  (DEBUG:file continue)
-;				  (DEBUG:file 18)
+;				  (DEBUG:file continue-cont)
+;				  (mov    continue-cont ,scm-false)
 ;				  (DEBUG:scm:stack)
 				  ; []
 ;				  (pop    env)
@@ -402,9 +424,8 @@
 				  ;; contを呼ばずに(正常に)戻ってくるとここ
 				  (GOTO   ,end-label)
 
-				,cont-label
+				,cont-proc
 				  ;; [arg]
-;				  (DEBUG:file 0)
 ;				  (DEBUG:file continue)
 ;				  (DEBUG:scm:w)
 ;				  (DEBUG:scm:stack)
@@ -416,13 +437,37 @@
 
 				  ;; [env arg]
 				  (pop  t1) ;外env
+
+;				  (DEBUG:file 2)
+;				  (DEBUG:scm:stack)
+;				  (DEBUG:file continue)
+;				  (DEBUG:file continue-cont)
+
 				  (pop  val) ; val = retv (というかarg)
+;				  (DEBUG:file 64)
+;				  (DEBUG:scm:w) ; arg
+
+				  (mov    w continue-cont)
+				  (bf     ,skip-internal)
+;				  (mov    w continue-cont)
+;				  (bnull  ,skip-internal)
+;				  (DEBUG:file 65)
+;				  (DEBUG:file continue)
+;				  (DEBUG:file continue-cont)
+				  (mov    continue-cont continue)
+				,skip-internal
+
+;				  (DEBUG:file val)
 				  ;; []
 ;				  (DEBUG:file val)
 ;				  (DEBUG:scm:w)
 ;				  (DEBUG:scm:stack)
 
-				  (mov  t2 continue)
+;				  (mov  t2 continue)
+;				  (mov   w continue-cont)
+;				  (bnnull jj)
+;				  (mov   continue-cont continue)
+;				  jj
 ;				  (pop env) ; env
 				  ;;(DEBUG:scm:stack)
 ;				  (pop)
@@ -430,6 +475,9 @@
 ;				  (DEBUG:pc)
 ;				  (DEBUG:scm:w)
 ;				  (MOVWF val)
+;				  (DEBUG:file 25)
+
+;				  (pop    t1)
 
 				  (MOVF  #x77 W) (MOVWF #x3C)
 				  (MOVF  #x76 W) (MOVWF #x3B)
@@ -440,21 +488,26 @@
 				  (MOVF  #x71 W) (MOVWF continue)
 				  (MOVF  #x70 W) (MOVWF env)
 
+;				  (mov continue t1)
+
 ;				  (DEBUG:scm:w)
 ;				  (DEBUG:file val)
 ;				  (DEBUG:scm:stack)
 ;				  (DEBUG:scm:int16s)
 
 ;				  ;; (GOTO   after-call)
-;				  (pop    continue)
 ;				  (pop    env)
 ;			   (mov    w val) ; 返り値を受け取る
 				   ;; fall through
 ;				  (mov    continue t2) ;; cont呼び出し元のcontinueで上書き
 
 				   ;; ここはcall/ccの戻り先
+;				  (DEBUG:file val)
 				,end-label
+;				  (DEBUG:pc)
+;				  (DEBUG:file continue-cont)
 				  (mov    w val) ; 返り値を受け取る
+;				  (DEBUG:scm:w)
 ;				  (DEBUG:file 18)
 ;				  (DEBUG:scm:w)
 ;				  (DEBUG:scm:stack)
@@ -517,21 +570,29 @@
 
 		  (-- proc-body-begins)
 		  ,@(append-map (lambda (exp) 
-						  (scm-eval exp env+)
-;						  (let1 end-of-expr (label-gen "eoe")
-;							`(
+;						  (scm-eval exp env+)
+						  (let1 end-of-expr (label-gen "eoe")
+							`(
+;							  (mov continue-cont ,scm-false)
 ;							  (mov continue (label ,end-of-expr))
-;							  ,@(scm-eval exp env+)
-;							  (mov val w)
+;
+							  ,@(scm-eval exp env+)
+							  (mov val w)
+;
+;							  (DEBUG:file continue-cont)
+;							  (mov   w continue-cont)
+;							  (DEBUG:scm:w)
+;							  (bf    ,end-of-expr)
+;							  (bnull ,end-of-expr)
+;							  (mov continue continue-cont)
 ;							  (ret)
 ;							  ,end-of-expr
-;							  )
-;							)
-						  )
+							  )
+							))
 						body)
 		  (-- proc-body-ends)
 
-		  (mov   val w)
+;		  (mov   val w)
 
 		  (pop   continue)
 		  (pop   env) ; 外env
@@ -570,7 +631,47 @@
 				(mov  w ,scm-nil)
 				(cons)
 				(mov env w))
-			  (append-map (lambda (exp) (scm-eval exp env)) scm-code)
+;			  (append-map (lambda (exp) (scm-eval exp env)) scm-code)
+			  (append-map (lambda (exp)
+							;; (scm-eval exp env)
+							(let1 end-of-expr (label-gen "eoe")
+							  `(
+;								(DEBUG:scm:stack)
+								(mov continue-cont ,scm-undefined)
+;								(DEBUG:file 80)
+;								(DEBUG:file continue-cont)
+;								(DEBUG:file int16-addr)
+;							  (mov continue (label ,end-of-expr))
+
+								,@(scm-eval exp env)
+								(mov val w)
+								
+;								(DEBUG:file continue-cont)
+;								(DEBUG:file 0)
+;								(DEBUG:scm:w)
+;								(DEBUG:file 81)
+;								(DEBUG:file continue-cont)
+								(mov    w continue-cont)
+;								(DEBUG:scm:w)
+								(bf     ,end-of-expr)
+;								(DEBUG:file 82)
+								(mov    w continue-cont)
+								(bundef ,end-of-expr)
+;								(mov   w continue-cont)
+;								(bnull ,end-of-expr)
+;								(DEBUG:file 83)
+;								(DEBUG:file continue-cont)
+								(mov continue continue-cont)
+								(mov continue-cont ,scm-undefined)
+								(ret)
+							  ,end-of-expr
+;								(DEBUG:file 85)
+;								(DEBUG:scm:pairs)
+;								(DEBUG:scm:int16s)
+								)
+							  )
+							)
+						  scm-code)
 			  ))))
 
 

@@ -666,6 +666,7 @@
 	 (define (scm-lref? obj) (= 1 (logand #b11 obj))) ;; lref ------01
 	 (define (scm-int16? obj) (= #b010 (logand #b111 obj))) ;; int16 -----010
 	 (define (scm-lambda? obj) (= #b0110 (logand #b1111 obj))) ;; proc ----0110
+	 (define (scm-continuation? obj) (= #b11110110 obj)) ;; proc 11110110
 	 (define (scm-misc-obj? obj) (= #b01110 (logand #b11111 obj))) ;; misc ---01110
 
 	 (define (scm-car pair)
@@ -700,10 +701,15 @@
 									  #`" . ,(scmval->string cd_)"
 									  )))))))
 	 (define (scm-proc->string sv)
-	   (sprintf "[λ (%d) %04x %02x]"
-				(scm-proc-arity sv)
-				(scm-proc-entrypoint sv)
-				(scm-proc-env sv) ))
+	   (if (= 15 (scm-proc-arity sv)) ;(scm-continuation? sv)
+		   (sprintf "#<continuation:#%04x:%02x>"
+					(scm-proc-entrypoint sv)
+					(scm-proc-env sv) )
+		   (sprintf "#<λ%d:%04x:%02x>"
+					(scm-proc-arity sv)
+					(scm-proc-entrypoint sv)
+					(scm-proc-env sv) )
+		   ))
 	 (define (scmval->string sv)
 	   (cond
 		[(scm-proc? sv) ; = (logand #b1111 sv) #b0110) ; ----0110
@@ -747,6 +753,7 @@
 						(let1 sv (logior (ash ofs 3) #b010)
 						  (sprintf "%02x:%s" sv (scmval->string sv))
 						  ))
+;					  (iota (+ 5 (- int16-addr #x4f))))
 					  (iota (- int16-addr #x4f)))
 				 )))
 

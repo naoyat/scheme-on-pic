@@ -163,6 +163,7 @@
 					 ;; procエントリポイントへ。
 					 ;; continueは保存されていないよ
 ;					 (GOTO   label)
+;				   (DEBUG:file continue-cont)
 				   (-- (call w))
 				   (mov    w temp) ; goto entrypoint
 				   (int16-upper)
@@ -217,6 +218,22 @@
 			 (XORLW  ,scm-nil)
 			 (BTFSS  STATUS Z)
 			 (GOTO   ,label) ; goto :label if Z==1 ; ie. w == scm-nil
+			 )))
+
+   (list 'bundef ;; branch if undefined
+		 (lambda (label)
+		   `((-- bundef ":" ,label)
+			 (XORLW  ,scm-undefined)
+			 (BTFSC  STATUS Z)
+			 (GOTO   ,label) ; goto :label if Z==1 ; ie. w == scm-false
+			 )))
+
+   (list 'bdef ;; branch unless undefined
+		 (lambda (label)
+		   `((-- bdef ":" ,label)
+			 (XORLW  ,scm-undefined)
+			 (BTFSS  STATUS Z)
+			 (GOTO   ,label) ; goto :label if Z==1 ; ie. w == scm-false
 			 )))
 
    (list 'nullp

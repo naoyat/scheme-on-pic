@@ -11,13 +11,15 @@
 ;;	argl ; 引数リスト
 	env ; 環境
 	continue
+	continue-cont
 	val
 	t1 ; dep, hi
 	t2 ; pos, lo
 	))
 
 (define scmlib-initcode
-  '((mov    top-of-stack #x37) ; 38hから始めたい
+  '(;(DEBUG:file #x7e)
+	(mov    top-of-stack #x37) ; 38hから始めたい
 	(mov    pair-addr    #x1F) ; 20hから始めたい
 	(mov    int16-addr   #x4F) ; 50hから
 	))
@@ -234,6 +236,7 @@
 
 	 (push) ; [y]
 	 (int16-lower) ; w = y.lo
+	 (BCF    STATUS C) ; carry = 0
 	 (ADDWF  t2 F) ; t2 += w
 	 (BTFSS  STATUS C)
 	 (GOTO   int16-add-nocarry)
@@ -279,6 +282,7 @@
 
 	 (push) ; [y]
 	 (int16-lower) ; w = x.lo
+	 (BSF    STATUS C) ; borrow = 0
 	 (SUBWF  t2 F) ; t2 -= w
 	 (BTFSC  STATUS C)
 	 (GOTO   int16-sub-noborrow)
@@ -311,6 +315,7 @@
 	 (mov    t1 w) ; t1 = w = x.hi
 	 (pop)
 	 ;; t2--
+	 (BCF    STATUS C) ; carry = 0
 	 (INCF   t2 F)
 	 (BTFSC  STATUS C) ; skip if unset (ie. carry=0)
 	 (INCF   t1 F) ; t1 += carry
@@ -333,6 +338,7 @@
 	 (mov    t1 w) ; t1 = w = x.hi
 	 (pop)
 	 ;; t2--
+	 (BSF    STATUS C) ; borrow = 0
 	 (DECF   t2 F)
 	 (BTFSS  STATUS C) ; skip if set (ie. borrow=0)
 	 (DECF   t1 F) ; t1 -= borrow
