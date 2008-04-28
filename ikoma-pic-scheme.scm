@@ -185,6 +185,8 @@
 					  [code `(
 							  (push   continue) ; [continue env {args}]
 							  (mov    continue (label ,after-call)) ; continue = <after-call>
+;							  (push   continue) ; [continue env {args}]
+;							  (mov    continue (label ,after-call)) ; continue = <after-call>
 ;;							  ,@(scm-eval (car operands) env)
 ;							  (push))])
 							  )])
@@ -196,7 +198,7 @@
 				 ;; wにはprocのアドレス
 				   ;; proc [{argn ... arg1}]
 				   (call) ;; op
-				   ,after-call
+				,after-call
 				   (pop    continue)
 ;				   (pop    env)
 				   (mov    w val) ; 返り値を受け取る

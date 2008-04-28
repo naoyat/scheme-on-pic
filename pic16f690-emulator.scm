@@ -722,8 +722,11 @@
 		   (sprintf "<%d,%d>" dep pos))]
 		[(scm-int16? sv) ; = (logand #b111 sv) #b010) ;; int16
 		 (let1 ofs (ash sv -3)
-		   (x->string (+ (* (file-get (+ #xD0 ofs)) 256)
-						 (file-get (+ #x150 ofs)))))]
+		   (let1 val (+ (* (file-get (+ #xD0 ofs)) 256)
+						 (file-get (+ #x150 ofs)))
+			 (if (<= val 32767)
+				 (sprintf "%d" val)
+				 (sprintf "%d" (- val 65536))) ))]
 	    [(scm-misc-obj? sv) ; = (logand #b11111 sv) #b01110)
 		 (case (ash sv -5)
 		   [(0) "#f"]

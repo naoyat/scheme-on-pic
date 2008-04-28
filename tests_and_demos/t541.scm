@@ -1,15 +1,15 @@
 ;; higepon #1
 (define cont #f)
 
-(define (a)
-  (print 1)
-  ((lambda ()
-	 (print 2)
-	 (call/cc (lambda (c) (set! cont c)))
-	 (print 3)))
-  (print 4))
+(define a (lambda ()
+			(print 1)
+			((lambda ()
+			   (print 2)
+			   (call/cc (lambda (c) (set! cont c)))
+			   (print 3)))
+			(print 4)))
 
-(print 0)
+;(print 0)
 (a)
 
 ;(print)

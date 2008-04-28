@@ -1,10 +1,11 @@
-;; higepon #3
+;;; higepon #2
 (define cont #f)
-(define a (lambda ()
-			(if (call/cc (lambda (c) (set! cont c) #f))
-				(print 1)
-				(print 0))
-			(print 9)))
+(define (a)
+  (+ 1
+	 (+ 2 3)
+	 (call/cc (lambda (c) (set! cont c) 4))
+	 (+ 5 6)))
 
-(a)
-(cont #t)
+(print (a))
+
+(print (cont 5))

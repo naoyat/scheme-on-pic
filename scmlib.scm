@@ -744,6 +744,13 @@
 	 (cadddr)
 	 (set-car)
 	 (RETURN)
+   lset31  ; (cadadddr env) = w
+     (push)
+	 (mov    w env)
+	 (cadddr)
+	 (cdr)
+	 (set-car)
+	 (RETURN)
 
 	 ;;
 	 ;; lrefXX
