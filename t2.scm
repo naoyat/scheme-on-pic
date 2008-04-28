@@ -14,6 +14,6 @@
 ;	(print "---------")
 ;	(map print program)
 ;	(print "---------")
-	(ips program #f #f #f #f #t)
+	(ips program #f #f #f #f #f)
 	;;(ips program #t #t #f #f)
 	))

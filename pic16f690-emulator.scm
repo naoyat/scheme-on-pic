@@ -849,6 +849,11 @@
 									  (pc++)
 									  #f)
 									`(DEBUG:w))]
+					   [(#b1111111) (values (lambda ()
+											  (pc++)
+											  (pc++)
+											  #f)
+											`(DEBUG:skip-if-emulator))]
 					   [(#b1111) (values (lambda ()
 										   (debug-print-snapshot)
 										   (pc++)

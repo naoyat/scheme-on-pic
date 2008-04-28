@@ -939,13 +939,17 @@
    print
 ;     (DEBUG:pc)
 ;     (DEBUG:scm:stack)
-;    (push)
+     (push)
 	 (DEBUG:scm:w-pp) ;; for debug
 ;     (DEBUG:scm:stack)
 ;	 (DEBUG:if-debug)
+;	 (RETURN)
+	 (DEBUG:skip-if-emulator)
+	 (GOTO print-in-led)
 	 (RETURN)
-;	 (GOTO print-in-led)
+
     print-in-led
+;	 (pop)
 	 (int16-upper)
 	 (CALL   display-8bit-value)
      (pop)
@@ -953,5 +957,4 @@
 	 (CALL   display-8bit-value)
 	 (mov    w t1)
 	 (RETURN)
-
 	 ))

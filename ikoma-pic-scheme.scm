@@ -707,7 +707,7 @@
 		(take l (- (length l) (length found)))
 		l)))
 
-(define (ips scm-code macro-asm? asm? show-util-code? disasm? . rest)
+(define (ips scm-code macro-asm? asm? show-util-code? disasm? emulate? . rest)
   (let1 macro-asm-code (scheme->macro-asm scm-code)
 
 	(when macro-asm?
@@ -754,50 +754,51 @@
 			(save-obj-code obj-code hex-file)
 										;		  (sys-system "gosh pic16f690-main.scm _emutest.hex")
 			
-			(let1 pic (make-pic16f690)
-			  ([pic'load-hex-file] hex-file)
+			(when emulate?
+			  (let1 pic (make-pic16f690)
+				([pic'load-hex-file] hex-file)
 			  ;; (print "load hex-file completed")
 			  
-			  [pic'on]
+				[pic'on]
 			  
 ;			  (set! verbose-mode #t)
-			  (let loop ([last-portc -1])
-				(when (or verbose-mode (and sometimes (zero? (remainder cnt sometimes))))
-				  (if [pic'finished?]
-					  (begin (when show-led (printf "> %s\n" (4bit last-portc)))
-;							 (dump-snapshot [pic'snapshot])
-							 
-							 (printf "%08x: %s  ;; %s\n"
-									 [pic'pc] (mnemonic-pp [pic'mnemonic])
-									 (map (cut sprintf "%04x" <>) [pic'call-stack])
-									 ))
-					  (print "// waiting 1 cycle... //")
-					  ))
+				(let loop ([last-portc -1])
+				  (when (or verbose-mode (and sometimes (zero? (remainder cnt sometimes))))
+					(if [pic'finished?]
+						(begin (when show-led (printf "> %s\n" (4bit last-portc)))
+										;							 (dump-snapshot [pic'snapshot])
+							   
+							   (printf "%08x: %s  ;; %s\n"
+									   [pic'pc] (mnemonic-pp [pic'mnemonic])
+									   (map (cut sprintf "%04x" <>) [pic'call-stack])
+									   ))
+						(print "// waiting 1 cycle... //")
+						))
 				
-				;;(profiler-reset)
-				;;(profiler-start)
-				[pic'step]
-				;;(profiler-stop)
-				;;(profiler-show)
-				(inc! cnt)
+				  ;;(profiler-reset)
+				  ;;(profiler-start)
+				  [pic'step]
+				  ;;(profiler-stop)
+				  ;;(profiler-show)
+				  (inc! cnt)
 				
-				(let1 portc (logand #b1111 ([pic'f] 7))
-				  (when show-led
-					(unless (= portc last-portc)
-					  (printf "> %s\r" (4bit portc))
-					  (flush)
-					  (inc! cnt)))
-				  
-				  (if verbose-mode
-					  (guard (e (else
-								 [pic'halt]
-								 (printf ";; %08x: %s\n" [pic'pc] [pic'mnemonic])
-								 (dump-snapshot [pic'snapshot] 'full-mode)
-								 (print "ERROR: " (ref e 'message))
-								 ))
-						(unless [pic'halt?] (loop portc)))
-					  (unless [pic'halt?] (loop portc))
-					  )))
-			  )))
-	  
+				  (let1 portc (logand #b1111 ([pic'f] 7))
+					(when show-led
+					  (unless (= portc last-portc)
+						(printf "> %s\r" (4bit portc))
+						(flush)
+						(inc! cnt)))
+					
+					(if verbose-mode
+						(guard (e (else
+								   [pic'halt]
+								   (printf ";; %08x: %s\n" [pic'pc] [pic'mnemonic])
+								   (dump-snapshot [pic'snapshot] 'full-mode)
+								   (print "ERROR: " (ref e 'message))
+								   ))
+						  (unless [pic'halt?] (loop portc)))
+						(unless [pic'halt?] (loop portc))
+						)))
+				))))
+		  
 		))))

@@ -83,6 +83,8 @@
 						[('DEBUG:pc)         #b11101100000001]
 						[('DEBUG:nextinst)   #b11101100000010]
 						[('DEBUG:snapshot)   #b11101100001111]
+						[('DEBUG:skip-if-emulator)
+						                     #b11101101111111]
 						[('DEBUG:scm:w)      #b11101100010000]
 						[('DEBUG:scm:w-pp)   #b11101100010001]
 						[('DEBUG:scm:stack)  #b11101100010010]
@@ -258,4 +260,5 @@
 		  ;; for debug
 		  DEBUG:w DEBUG:file DEBUG:pc DEBUG:nextinst DEBUG:snapshot
 		  DEBUG:scm:w DEBUG:scm:w-pp DEBUG:scm:stack DEBUG:scm:pairs DEBUG:scm:int16s
+		  DEBUG:skip-if-emulator
 		  ))

@@ -51,4 +51,8 @@
 		   `((asm (DEBUG:scm:int16s)))
 		   ))
 
+   (list 'DEBUG:skip-if-emulator
+		 (lambda ()
+		   `((asm (DEBUG:skip-if-emulator)))
+		   ))
    ))

@@ -13,8 +13,8 @@
    ;; subroutines
    `((-- wait-100msec() #\: 100 msec loop)
 	 wait-100msec
-;	 (set     delay1 128)
-	 (set     delay1 38) ;;;; FOR EMULATOR
+	 (set     delay1 128)
+;;;	 (set     delay1 38) ;;;; FOR EMULATOR
 	 (set     delay2 0)
 	 loop-100msec
 	 (dec-jnz delay2 loop-100msec)
