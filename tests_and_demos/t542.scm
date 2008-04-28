@@ -7,5 +7,6 @@
 			   (+ 5 6))))
 
 (print (a))
+;(print (cont 5))
+(cont 5)
 
-(print (cont 5))
