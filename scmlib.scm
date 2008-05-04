@@ -491,6 +491,15 @@
 	 (RETLW  ,scm-false) ; Z=0
 
 	 ;;
+	 ;; eofp
+	 ;;
+   eofp
+	 (XORLW  ,scm-eof-object)
+	 (BTFSC  STATUS Z)
+	 (RETLW  ,scm-true) ; Z=1 (pair)
+	 (RETLW  ,scm-false) ; Z=0
+
+	 ;;
 	 ;; nullp
 	 ;;
    nullp
@@ -706,6 +715,13 @@
      (push)
 	 (mov    w env)
 	 (cdddar)
+	 (set-car)
+	 (RETURN)
+   lset4  ;(caddddar env) = w
+     (push)
+	 (mov    w env)
+	 (car)
+	 (cddddr)
 	 (set-car)
 	 (RETURN)
    lset10  ; (caadr env) = w
