@@ -78,6 +78,7 @@
 (require "./macro-asm-register-machine-plugin")
 (require "./macro-asm-scheme-plugin")
 (require "./macro-asm-debug-plugin")
+(require "./macro-asm-eeprom-plugin")
 
 (define (pic-macro-asm src)
   (let1 macro-asm (make-macro-assembler (list plug-in:basic

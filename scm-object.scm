@@ -44,7 +44,5 @@
 	(push) ; [entrypoint ----0110]
 	(mov   w env)
 	(cons) ; (entrypoint . env) [----0110]
-;	(asm (DEBUG:scm:w))
 	(cons) ; (----0110 entrypoint . env)
-;	(asm (DEBUG:scm:w))
 	))

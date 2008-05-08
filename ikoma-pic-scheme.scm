@@ -41,7 +41,7 @@
 (define (lookup var env)
   (let loop ([rest-env env] [dep 0])
 	(if (null? rest-env)
-		`((mov w ,scm-undefined))
+		`((constu));(mov w ,scm-undefined))
 		(let1 curr-frame (car rest-env)
 		  (let1 _ (memq var (car curr-frame))
 			(if _ `((-- ,var)
@@ -185,8 +185,6 @@
 					  [code `(
 							  (push   continue) ; [continue env {args}]
 							  (mov    continue (label ,after-call)) ; continue = <after-call>
-;							  (push   continue) ; [continue env {args}]
-;							  (mov    continue (label ,after-call)) ; continue = <after-call>
 ;;							  ,@(scm-eval (car operands) env)
 ;							  (push))])
 							  )])
@@ -215,7 +213,7 @@
   (if (null? l)
 	  `(
 ;		(-- w = "()")
-		(mov  w ,scm-nil)
+		(constn) ;(mov  w ,scm-nil)
 		)
 ;	  `(,@(gauche->pic (car elts))
 	  `(,@(scm-eval (car l) env)
@@ -255,7 +253,10 @@
 			   ))]
 ;		[(number? exp) (make-scm-16bit-integer exp)]
 
-		[(number? exp) `((consti ,exp))]
+		[(number? exp) (cond [(= scm-undefined exp) '((constu))]
+							 [(= scm-nil exp) '((constn))]
+							 [(= scm-false exp) '((constf))]
+							 [else `((consti ,exp))] )]
 
 		[(pair? exp)
 		 (case (first exp)
@@ -274,6 +275,16 @@
 				 [(:int16s) '((DEBUG:scm:int16s))]
 				 [else '()] )]
 			  [else '()] )]
+
+;		   [(cons)
+;			(let ([ca_ (second exp)]
+;				  [cd_ (third exp)])
+;			  `(;(DEBUG:scm:pairs)
+;				(consti-push ,ca_)
+;				(consti      ,cd_)
+;				(cons)
+;				;(DEBUG:scm:pairs)
+;				) )]
 
 		   [(begin)
 			;; seq = cdr exp
@@ -351,10 +362,6 @@
 					)
 				`(
 				  (-- call/cc)
-;				  (DEBUG:file 1)
-;				  (DEBUG:pc)
-;				  (DEBUG:scm:stack)
-;				  (DEBUG:file top-of-stack)
 
 ;				  (MOVWF #x70)
 				  (MOVF  env W) (MOVWF #x70)
@@ -389,37 +396,21 @@
 				  (push)
 				  ;; [cont] = [(0x16 entrypoint . env)]
 
-;				  (DEBUG:file 47)
 				  (mov   continue-cont ,scm-false)
-;				  (DEBUG:file continue-cont)
 ;				  (CLRF continue-cont)
 
 				  ,@(scm-eval proc env)
 
-;				  (DEBUG:file continue-cont)
 				  ;; proc [cont]
-;				  (DEBUG:file 17)
-;				  (DEBUG:scm:stack)
 
 ;				  (push   env)
 ;				  (push   continue) ; [continue env {args}]
-;				  (DEBUG:file continue-cont)
 				  (call) ; cont
-;				  (DEBUG:file continue-cont)
 
 				,after-call
-;				  (DEBUG:file 4)
-;				  (DEBUG:scm:w)
-;				  (DEBUG:file val)
-;				  (DEBUG:scm:stack)
-;				  (DEBUG:file continue-cont)
 				  (pop    continue)
 
-;				  (DEBUG:file 34)
-;				  (DEBUG:file continue)
-;				  (DEBUG:file continue-cont)
 ;				  (mov    continue-cont ,scm-false)
-;				  (DEBUG:scm:stack)
 				  ; []
 ;				  (pop    env)
 ;				  (mov    w val) ; 返り値を受け取る
@@ -428,9 +419,6 @@
 
 				,cont-proc
 				  ;; [arg]
-;				  (DEBUG:file continue)
-;				  (DEBUG:scm:w)
-;				  (DEBUG:scm:stack)
 				  ;;  脱出時 (cont retv)
 				  ;; [env retv (env)] ;; (call/cc ..) => retv
 				  ;;  通常時 (c arg)
@@ -544,9 +532,6 @@
 		,lambda-label
 		  (-- (λ ,vars ...));,@body))
 
-;		  (DEBUG:file 6)
-;		  (DEBUG:scm:stack)
-
 		  (pop   t1) ; t1 = 外env
 
 		  (mov   w ,scm-nil) ; () [n ... 1]
@@ -555,7 +540,6 @@
 		  (mov   w env)
 		  (cons) ; w = ((arg1 .. argn) env)
 		  ;; []
-;		  (DEBUG:file continue)
 ;		  (DEBUG:scm:stack)
 
 		  (mov   temp w)
@@ -581,9 +565,7 @@
 							  ,@(scm-eval exp env+)
 							  (mov val w)
 ;
-;							  (DEBUG:file continue-cont)
 ;							  (mov   w continue-cont)
-;							  (DEBUG:scm:w)
 ;							  (bf    ,end-of-expr)
 ;							  (bnull ,end-of-expr)
 ;							  (mov continue continue-cont)
@@ -599,12 +581,7 @@
 		  (pop   continue)
 		  (pop   env) ; 外env
 	  
-;		  (DEBUG:file continue)
-;		  (DEBUG:scm:stack)
 		  ;; []
-
-;		  (DEBUG:file 7)
-;		  (DEBUG:scm:stack)
 
 ;		  (mov   temp w) ;using temp for temp
 ;		  (mov   val w)
@@ -613,7 +590,6 @@
 ;		  (pop   env)
 ;		  (mov   w temp)
 					;(RETURN)
-;		  (DEBUG:file continue)
 		  (ret)
 
 		,skip-lambda-label
@@ -630,7 +606,7 @@
 	  (append `((-- env = ,gvals)
 				,@(scm-list gvals env)
 				(push)
-				(mov  w ,scm-nil)
+				(constn) ;(mov  w ,scm-nil)
 				(cons)
 				(mov env w))
 ;			  (append-map (lambda (exp) (scm-eval exp env)) scm-code)
@@ -721,6 +697,7 @@
 												plug-in:LED
 												plug-in:scheme
 												plug-in:debug
+												plug-in:eeprom
 												))
 	;;コンパイル
 ;	(when (and regs (not (null? regs)))

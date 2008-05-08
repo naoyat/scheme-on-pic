@@ -16,16 +16,16 @@
 ; hexファイルを書き込み
 ;
 (define (pic-write-hex-file hex-file)
-  (sys-system (format "pk2 -write ~a" hex-file)))
+  (sys-system (string-append "pk2 -write " hex-file)))
 
 ;
 ; 給電ON
 ;
-(define (pic-on) (sys-system (format "pk2 -on")))
+(define (pic-on) (sys-system "pk2 -on > /dev/null"))
 ;
 ; 給電OFF
 ;
-(define (pic-off) (sys-system (format "pk2 -off")))
+(define (pic-off) (sys-system "pk2 -off > /dev/null"))
 
 ;
 ; オブジェクトコードを書き込んで走らせる

@@ -98,23 +98,29 @@
 ;;
 ;; pass1
 ;;
-(define *file-registers*
+(define *file-registers* ;; PIC16F690
   (append (map cons
-			   '(INDF TMR0 PCL STATUS FSR PORTA PORTB PORTC
-					  PORTD PORTE PCLATH INTCON PIR1 PIR2 TMR1L TMR1H
-					  T1CON TMR2 T2CON SSPBUF SSPCON CCPR1L CCPR1H CCP1CON
-					  RCSTA TXREG RCREG CCPR2L CCPR2H CCP2CON ADRESH ADCON0)
+			   '(INDF TMR0 PCL STATUS FSR PORTA PORTB PORTC - - PCLATH INTCON
+					  PIR1 PIR2 TMR1L TMR1H T1CON TMR2 T2CON SSPBUF SSPCON
+					  CCPR1L CCPR1H CCP1CON
+					  RCSTA TXREG RCREG - PWM1CON ECCPAS ADRESH ADCON0)
 			   (iota 32))
 		  (map cons
-			   '(INDF OPTION_REG PCL STATUS FSR TRISA TRISB TRISC
-					  TRISD TRISE PCLATH INTCON PIE1 PIE2 PCON -
-					  - SSPCON2 PR2 SSPADD SSPSTAT - - -
-					  TXSTA SPBRG - - CMCON CVRCON ADRESL ADCON1)
-			   
-			   (iota 32))
+			   '(INDF OPTION_REG PCL STATUS FSR TRISA TRISB TRISC - - PCLATH INTCON
+					  PIE1 PIE2 PCON OSCCON OSCTUNE - PR2 SSPADD SSPSTAT WPUA IOCA
+					  WDTCON TXSTA SPBRG SPBRGH BAUDCTL - - ADRESL ADCON1)
+;					  TXSTA SPBRG - - CMCON CVRCON ADRESL ADCON1)
+			   (iota 32 #x80))
 		  (map cons
-			   '(ANSEL ANSELH)
-			   (iota 2 #x11e))
+			   '(INDF TMR0 PCL STATUS FSR PORTA PORTB PORTC - - PCLATH INTCON
+					  EEDAT EEADR EEDATH EEADRH - - - - - WPUB IOCB - VRCON
+					  CM1CON0 CM2CON0 CM2CON1 - - ANSEL ANSELH)
+			   (iota 32 #x100))
+		  (map cons
+			   '(INDF OPTION_REG PCL STATUS FSR TRISA TRISB TRISC - - PCLATH INTCON
+					  EECON1 EECON2 - -
+					  - - - - - - - - - - - - - PSTRCON SRCON -)
+			   (iota 32 #x180))
 		  ))
 
 (define (pass1 insts)
@@ -184,7 +190,7 @@
 	  (if (number? b)
 		  (if (<= 0 b 7) b 0)
 		  (case b
-			; STATUS
+			; STATUS <3>
 			[(C) 0]
 			[(DC) 1]
 			[(Z) 2]
@@ -194,8 +200,18 @@
 			[(RP1) 6]
 			[(IRP) 7]
 
-			; ADCON0
+			; ADCON0 <1f>
 			[(GO) 2] ; ADCON0
+
+			; INTCON <8b>
+ 			[(GIE) 7]
+
+			; EECON1 <18c>
+			[(EEPGD) 7]
+			[(WRERR) 3]
+			[(WREN) 2]
+			[(WR) 1]
+			[(RD) 0]
 
 			(else 0) )))
 

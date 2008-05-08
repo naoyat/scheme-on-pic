@@ -215,17 +215,17 @@
    (list 'nop (lambda () '())) ;; 0
    ;;## CONST ;; 1
    (list 'consti (lambda (n) (make-scm-16bit-integer n))) ;; 2
-   (list 'constn (lambda () `((MOVLW 'scm-nil)))) ;; 3
-   (list 'constf (lambda () `((MOVLW 'scm-false)))) ;; 4
-   (list 'constu (lambda () `((MOVLW 'scm-undefined)))) ;; 5
-   ;;## CONST_PUSH ;; 6
-   (list 'consti_push (lambda (n) `(,@(make-scm-16bit-integer n) (CALL push)))) ;; 7
-   (list 'constn_push (lambda () `((MOVLW 'scm-nil) (CALL push)))) ;; 8
-   (list 'constf_push (lambda () `((MOVLW 'scm-false) (CALL push)))) ;; 9
-   ;;## CONST_RET ;; 10
-   (list 'constf_ret (lambda () `((MOVLW 'scm-false) ;; 11
+   (list 'constn (lambda () `((MOVLW ,scm-nil)))) ;; 3
+   (list 'constf (lambda () `((MOVLW ,scm-false)))) ;; 4
+   (list 'constu (lambda () `((MOVLW ,scm-undefined)))) ;; 5
+   ;;## CONST-PUSH ;; 6
+   (list 'consti-push (lambda (n) `(,@(make-scm-16bit-integer n) (push)))) ;; 7
+   (list 'constn-push (lambda () `((MOVLW ,scm-nil) (push)))) ;; 8
+   (list 'constf-push (lambda () `((MOVLW ,scm-false) (push)))) ;; 9
+   ;;## CONST-RET ;; 10
+   (list 'constf-ret (lambda () `((MOVLW ,scm-false) ;; 11
 								  ,@(ret))))
-   (list 'constu_ret (lambda () `((MOVLW 'scm-undefined) ;; 12
+   (list 'constu-ret (lambda () `((MOVLW ,scm-undefined) ;; 12
 								  ,@(ret))))
    (list 'push ;; 13 (save-w)
 		 (lambda args
@@ -412,57 +412,57 @@
    (list 'lref14 (lambda () '((CALL lref14)))) ;; 70 <deprecated>
    ;; PUSH合成命令<*>はGauche VMとの互換性（というか比べやすさ）のために作ったもの。
    ;; 効率がよいとかいうことは特にない
-   (list 'lref_push (lambda (dep ofs) `(,@(lref dep ofs) (CALL push)))) ;; <*> 71
-   (list 'lref0_push (lambda () '((CALL lref0) (CALL push)))) ;; <*> 72
-   (list 'lref1_push (lambda () '((CALL lref1) (CALL push)))) ;; <*> 73
-   (list 'lref2_push (lambda () '((CALL lref2) (CALL push)))) ;; <*> 74
-   (list 'lref3_push (lambda () '((CALL lref3) (CALL push)))) ;; <*> 75
-   (list 'lref10_push (lambda () '((CALL lref10) (CALL push)))) ;; <*> 76
-   (list 'lref11_push (lambda () '((CALL lref11) (CALL push)))) ;; <*> 77
-   (list 'lref12_push (lambda () '((CALL lref12) (CALL push)))) ;; <*> 78
-   (list 'lref20_push (lambda () '((CALL lref20) (CALL push)))) ;; <*> 79
-   (list 'lref21_push (lambda () '((CALL lref21) (CALL push)))) ;; <*> 70
-   (list 'lref30_push (lambda () '((CALL lref30) (CALL push)))) ;; <*> 81
-   (list 'lref4_push (lambda () '((CALL lref4) (CALL push)))) ;; <*> 82 <deprecated>
-   (list 'lref13_push (lambda () '((CALL lref13) (CALL push)))) ;; <*> 83 <deprecated>
-   (list 'lref14_push (lambda () '((CALL lref14) (CALL push)))) ;; <*> 84 <deprecated>
+   (list 'lref-push (lambda (dep ofs) `(,@(lref dep ofs) (push)))) ;; <*> 71
+   (list 'lref0-push (lambda () '((CALL lref0) (push)))) ;; <*> 72
+   (list 'lref1-push (lambda () '((CALL lref1) (push)))) ;; <*> 73
+   (list 'lref2-push (lambda () '((CALL lref2) (push)))) ;; <*> 74
+   (list 'lref3-push (lambda () '((CALL lref3) (push)))) ;; <*> 75
+   (list 'lref10-push (lambda () '((CALL lref10) (push)))) ;; <*> 76
+   (list 'lref11-push (lambda () '((CALL lref11) (push)))) ;; <*> 77
+   (list 'lref12-push (lambda () '((CALL lref12) (push)))) ;; <*> 78
+   (list 'lref20-push (lambda () '((CALL lref20) (push)))) ;; <*> 79
+   (list 'lref21-push (lambda () '((CALL lref21) (push)))) ;; <*> 70
+   (list 'lref30-push (lambda () '((CALL lref30) (push)))) ;; <*> 81
+   (list 'lref4-push (lambda () '((CALL lref4) (push)))) ;; <*> 82 <deprecated>
+   (list 'lref13-push (lambda () '((CALL lref13) (push)))) ;; <*> 83 <deprecated>
+   (list 'lref14-push (lambda () '((CALL lref14) (push)))) ;; <*> 84 <deprecated>
 
    ;;## GREF 85
-   ;;## GREF_PUSH 86
+   ;;## GREF-PUSH 86
    ;;## GREF_CALL 87
    ;;## GREF_TAIL_CALL 88
    ;;## PUSH_GREF 89
    ;;## PUSH_GREF_CALL 90
    ;;## PUSH_GREF_TAIL_CALL 91
-   ;;## LREF0_PUSH_GREF 92
-   ;;## LREF0_PUSH_GREF_CALL 93
-   ;;## LREF0_PUSH_GREF_TAIL_CALL 94
+   ;;## LREF0-PUSH_GREF 92
+   ;;## LREF0-PUSH_GREF_CALL 93
+   ;;## LREF0-PUSH_GREF_TAIL_CALL 94
 
    ;;## PROMISE 95
    ;;## CONST_APPLY 96
 
    (list 'cons (lambda () '((CALL cons)) )) ;; 97
-   (list 'cons_push (lambda () '((CALL cons) ;; <*> 98
-								 (CALL push))))
+   (list 'cons-push (lambda () '((CALL cons) ;; <*> 98
+								 (push))))
    ; car/cdr
    (list 'car (lambda () '((CALL car)) )) ;; 99
-   (list 'car_push (lambda () '((CALL car) ;; <*> 100
-								(CALL push))))
+   (list 'car-push (lambda () '((CALL car) ;; <*> 100
+								(push))))
    (list 'cdr (lambda () '((CALL cdr)) )) ;; 101
-   (list 'cdr_push (lambda () '((CALL cdr) ;; <*> 102
-								(CALL push))))
+   (list 'cdr-push (lambda () '((CALL cdr) ;; <*> 102
+								(push))))
    (list 'caar (lambda () '((CALL car) (CALL car)) )) ;; 103
-   (list 'caar_push (lambda () '((CALL car) (CALL car) ;; <*> 104
-								 (CALL push))))
+   (list 'caar-push (lambda () '((CALL car) (CALL car) ;; <*> 104
+								 (push))))
    (list 'cadr (lambda () '((CALL cdr) (CALL car)) )) ;; 105
-   (list 'cadr_push (lambda () '((CALL cdr) (CALL car) ;; <*> 106
-								 (CALL push))))
+   (list 'cadr-push (lambda () '((CALL cdr) (CALL car) ;; <*> 106
+								 (push))))
    (list 'cdar (lambda () '((CALL car) (CALL cdr)) )) ;; 107
-   (list 'cdar_push (lambda () '((CALL car) (CALL cdr) ;; <*> 108
-								 (CALL push))))
+   (list 'cdar-push (lambda () '((CALL car) (CALL cdr) ;; <*> 108
+								 (push))))
    (list 'cddr (lambda () '((CALL cdr) (CALL cdr)) )) ;; 109
-   (list 'cddr_push (lambda () '((CALL cdr) (CALL cdr) ;; <*> 110
-								 (CALL push))))
+   (list 'cddr-push (lambda () '((CALL cdr) (CALL cdr) ;; <*> 110
+								 (push))))
    (list 'caaar (lambda () '((CALL car) (CALL car) (CALL car)) ))
    (list 'caadr (lambda () '((CALL cdr) (CALL car) (CALL car)) ))
    (list 'cadar (lambda () '((CALL car) (CALL cdr) (CALL car)) ))
