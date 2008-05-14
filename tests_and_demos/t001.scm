@@ -1,0 +1,22 @@
+(asm
+ ;;(eeprom-write 0 1)
+ (MOVLW  0)
+ (push)
+ (MOVLW  1)
+ (CALL   eeprom-write)
+ ;;(eeprom-write 1 2)
+ (MOVLW  1)
+ (push)
+ (MOVLW  2)
+ (CALL   eeprom-write)
+
+ ;;(eeprom-read 0)
+ (MOVLW  0)
+ (CALL   eeprom-read)
+ (DEBUG:w)
+
+ ;;(eeprom-read 1)
+ (MOVLW  1)
+ (CALL   eeprom-read)
+ (DEBUG:w)
+ )
